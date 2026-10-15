@@ -74,7 +74,14 @@ your first answer was wrong.
   Evidence: The test fails because `GET /api/rates` sometimes returns 503 due to `Math.random() < fxFailureRate`, which has a 35% failure rate by default. The UI and test locator are correct. So, the same code can pass or fail randomly. Out of 10 runs, around 6–7 runs are expected to pass.
 ![alt text](image.png)
 ![alt text](image-1.png)
-2.
+2.**Think first #2** — the starter `.gitignore` is missing **three** entries that PL-01
+> requires by the end of this lab. Name them, and for each say what would end up on GitHub
+> without it.
+>
+> 1. .vercel/ → Vercel deployment files would be uploaded to GitHub.
+> 2. blob-report/ → Playwright test report files would be uploaded to GitHub.
+> 3. .env → Environment variables and possibly secret keys would be uploaded to GitHub.
+
 3.
 4.
 5.
