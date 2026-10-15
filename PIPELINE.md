@@ -3,9 +3,9 @@
 Rename this file to `PIPELINE.md` and fill every section. Links must be clickable URLs to
 runs in **your** repository. Screenshots go in `docs/` and are linked from here.
 
-Student ID: __________   Name: ______________________   Repository: ______________________
+Student ID: ****\_\_**** Name: **********\_\_********** Repository: **********\_\_**********
 
-Production URL: ____________________________________________
+Production URL: ********************\_\_\_\_********************
 
 ## 1. Pipeline at a glance
 
@@ -19,71 +19,89 @@ flowchart LR
 
 ## 2. Evidence
 
-| AC | What | Link / screenshot |
-|---|---|---|
-| AC-03.2 | screenshot of the Vercel dashboard's deployment list — every entry made by Actions | |
-| AC-03.4 | screenshot of Deployment Protection: Vercel Authentication on, bypass created | |
-| AC-04.3–4 | a green `PR gate` run: smoke → deploy-preview → test-preview, with the preview URL | |
-| AC-04.6 | the same run's duration, warm cache | |
-| AC-05.1–3 | screenshot of the branch protection / ruleset settings | |
-| AC-05.4 | the pull request whose merge was blocked by a red required check | |
-| AC-06.3–4 | a green `Main pipeline` run: test → deploy-production → verify | |
-| AC-06.7 | the `Main pipeline` run with the test job red and the deploy skipped | |
-| AC-07.2 | three `Nightly` runs started by hand — one per target — each with its merged report | |
-| AC-08.2 | the quarantine issue | |
+| AC        | What                                                                                | Link / screenshot |
+| --------- | ----------------------------------------------------------------------------------- | ----------------- |
+| AC-03.2   | screenshot of the Vercel dashboard's deployment list — every entry made by Actions  |                   |
+| AC-03.4   | screenshot of Deployment Protection: Vercel Authentication on, bypass created       |                   |
+| AC-04.3–4 | a green `PR gate` run: smoke → deploy-preview → test-preview, with the preview URL  |                   |
+| AC-04.6   | the same run's duration, warm cache                                                 |                   |
+| AC-05.1–3 | screenshot of the branch protection / ruleset settings                              |                   |
+| AC-05.4   | the pull request whose merge was blocked by a red required check                    |                   |
+| AC-06.3–4 | a green `Main pipeline` run: test → deploy-production → verify                      |                   |
+| AC-06.7   | the `Main pipeline` run with the test job red and the deploy skipped                |                   |
+| AC-07.2   | three `Nightly` runs started by hand — one per target — each with its merged report |                   |
+| AC-08.2   | the quarantine issue                                                                |                   |
 
 ## 3. Timings
 
-| Run | Cold cache | Warm cache | Budget | Within? |
-|---|---|---|---|---|
-| PR gate (all three jobs) | | | 8 min | |
-| Main pipeline (all three jobs) | | | 10 min | |
-| Nightly, target = production (start to merged report) | | | 20 min | |
-| Nightly, target = local (start to merged report) | | | 20 min | |
+| Run                                                   | Cold cache | Warm cache | Budget | Within? |
+| ----------------------------------------------------- | ---------- | ---------- | ------ | ------- |
+| PR gate (all three jobs)                              |            |            | 8 min  |         |
+| Main pipeline (all three jobs)                        |            |            | 10 min |         |
+| Nightly, target = production (start to merged report) |            |            | 20 min |         |
+| Nightly, target = local (start to merged report)      |            |            | 20 min |         |
 
-Which step did the browser cache save the most time on, and how much? ______________
+Which step did the browser cache save the most time on, and how much? ******\_\_******
 
-Nightly against production vs. against a local build — which was faster, and why? ______
+Nightly against production vs. against a local build — which was faster, and why? **\_\_**
 
 ## 4. Triage record — the quarantined test
 
-| | |
-|---|---|
-| Symptom | fx.spec.ts sometimes fails because /api/rates returns 503. |
-| Local measurement (`--repeat-each=10`) | 9 passed / 1 failed |
-| Classification (regression / flaky / environment) | environment|
-| Evidence that decided it | rates.get.ts randomly returns 503 with a 35% failure rate to simulate an external service failure.|
-| Containment applied | |
-| Cure (planned or done) | |
-| Expiry date | |
+|                                                   |                                                                                                    |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Symptom                                           | fx.spec.ts sometimes fails because /api/rates returns 503.                                         |
+| Local measurement (`--repeat-each=10`)            | 9 passed / 1 failed                                                                                |
+| Classification (regression / flaky / environment) | environment                                                                                        |
+| Evidence that decided it                          | rates.get.ts randomly returns 503 with a 35% failure rate to simulate an external service failure. |
+| Containment applied                               |                                                                                                    |
+| Cure (planned or done)                            |                                                                                                    |
+| Expiry date                                       |                                                                                                    |
 
 ## 5. The teammate's pull request (PR-42)
 
-1. What the PR gate reported (all three jobs), and why: ________________________________
-2. What the main pipeline reported, and which test(s) caught it: ______________________
-3. What the Vercel dashboard and the production URL showed while `main` was red: _______
-4. How you restored `main`: _______________________________________________________
-5. Your decision on Think first #10, with the reason: _____________________________
+1. What the PR gate reported (all three jobs), and why: **************\_\_\_\_**************
+2. What the main pipeline reported, and which test(s) caught it: **********\_\_**********
+3. What the Vercel dashboard and the production URL showed while `main` was red: **\_\_\_**
+4. How you restored `main`: **************************\_\_\_**************************
+5. Your decision on Think first #10, with the reason: **************\_**************
 
 ## 6. Think-first answers
 
 Copy all ten answers here, with the correction you made after running the command where
 your first answer was wrong.
 
-1. Predicted passes: 6   Actual: 9   Classification: Environment
-  Evidence: The test fails because `GET /api/rates` sometimes returns 503 due to `Math.random() < fxFailureRate`, which has a 35% failure rate by default. The UI and test locator are correct. So, the same code can pass or fail randomly. Out of 10 runs, around 6–7 runs are expected to pass.
-![alt text](image.png)
-![alt text](image-1.png)
-2.**Think first #2** — the starter `.gitignore` is missing **three** entries that PL-01
-> requires by the end of this lab. Name them, and for each say what would end up on GitHub
-> without it.
->
+1. **Think first #1**
+> Predicted passes: 6
+
+> Actual: 9
+
+> Classification: Environment
+
+> Evidence: The test fails because `GET /api/rates` sometimes returns 503 due to `Math.random() < fxFailureRate`, which has a 35% failure rate by default. The UI and test locator are correct. So, the same code can pass or fail randomly. Out of 10 runs, around 6–7 runs are expected to pass.
+
+> ![alt text](image.png)
+> ![alt text](image-1.png)
+
+2. **Think first #2**
+
 > 1. .vercel/ → Vercel deployment files would be uploaded to GitHub.
 > 2. blob-report/ → Playwright test report files would be uploaded to GitHub.
 > 3. .env → Environment variables and possibly secret keys would be uploaded to GitHub.
 
-3.
-4.
+3. **Think first #3**
+> Failure rate without `retry: 0`: About 12% (0.35 × 0.35 = 0.1225), because the app makes two requests and the test fails only if both return 503.
+
+> Why worse: App retries hide the problem but do not fix it. They make failures harder to reproduce and leave less clear evidence in test reports. Playwright retries can mark tests as flaky and save traces for debugging. They can also be configured differently for CI and local testing, without changing the app's behavior.
+
+4.**Think first #4** —
+
+> Answer: No, the password is not safe. Git keeps the commit history, so the old password can still be found using git log -p or GitHub's commit history. Since the repository is public, someone may have already copied it.
+
+> What a real team should do:
+> Rotate the password immediately and revoke the old one.
+> Check the logs for suspicious activity.
+> If necessary, remove the password from Git history using git filter-repo or BFG, then force-push the changes.
+
 5.
 6.
 7.
