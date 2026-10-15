@@ -3,9 +3,9 @@
 Rename this file to `PIPELINE.md` and fill every section. Links must be clickable URLs to
 runs in **your** repository. Screenshots go in `docs/` and are linked from here.
 
-Student ID: ****\_\_**** Name: **********\_\_********** Repository: **********\_\_**********
+Student ID: 662115010 Name: Chawaphat Akaraphat Repository: https://github.com/Chawaphat/camt-bookshop
 
-Production URL: ********************\_\_\_\_********************
+Production URL: ********\*\*\*\*********\_\_\_\_********\*\*\*\*********
 
 ## 1. Pipeline at a glance
 
@@ -41,29 +41,29 @@ flowchart LR
 | Nightly, target = production (start to merged report) |            |            | 20 min |         |
 | Nightly, target = local (start to merged report)      |            |            | 20 min |         |
 
-Which step did the browser cache save the most time on, and how much? ******\_\_******
+Which step did the browser cache save the most time on, and how much? **\*\***\_\_**\*\***
 
 Nightly against production vs. against a local build — which was faster, and why? **\_\_**
 
 ## 4. Triage record — the quarantined test
 
-|                                                   |                                                                                                    |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Symptom                                           | fx.spec.ts sometimes fails because /api/rates returns 503.                                         |
-| Local measurement (`--repeat-each=10`)            | 9 passed / 1 failed                                                                                |
-| Classification (regression / flaky / environment) | environment                                                                                        |
-| Evidence that decided it                          | rates.get.ts randomly returns 503 with a 35% failure rate to simulate an external service failure. |
-| Containment applied                               |                                                                                                    |
-| Cure (planned or done)                            |                                                                                                    |
-| Expiry date                                       |                                                                                                    |
+|                                                   |                                                                                                                                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Symptom                                           | fx.spec.ts sometimes fails because /api/rates returns 503.                                                                                                                           |
+| Local measurement (`--repeat-each=10`)            | 9 passed / 1 failed                                                                                                                                                                  |
+| Classification (regression / flaky / environment) | environment                                                                                                                                                                          |
+| Evidence that decided it                          | rates.get.ts randomly returns 503 with a 35% failure rate to simulate an external service failure.                                                                                   |
+| Containment applied                               | - Tagged `@quarantine`, with a link to this issue and an expiry date, in `tests/fx.spec.ts`, - Blocking jobs do not run `@quarantine` tests. `retries` stays at 2 (not raised to make this test pass).                                  |
+| Cure (planned or done)                            |     Replace the test with two tests that control `/api/rates` using `page.route`:one for a successful answer and one for an outage.     |
+| Expiry date                                       |                 2026-10-30                                                                                                                                                                     |
 
 ## 5. The teammate's pull request (PR-42)
 
-1. What the PR gate reported (all three jobs), and why: **************\_\_\_\_**************
-2. What the main pipeline reported, and which test(s) caught it: **********\_\_**********
+1. What the PR gate reported (all three jobs), and why: ******\*\*******\_\_\_\_******\*\*******
+2. What the main pipeline reported, and which test(s) caught it: ****\*\*****\_\_****\*\*****
 3. What the Vercel dashboard and the production URL showed while `main` was red: **\_\_\_**
-4. How you restored `main`: **************************\_\_\_**************************
-5. Your decision on Think first #10, with the reason: **************\_**************
+4. How you restored `main`: ************\*\*************\_\_\_************\*\*************
+5. Your decision on Think first #10, with the reason: ******\*\*******\_******\*\*******
 
 ## 6. Think-first answers
 
@@ -71,7 +71,7 @@ Copy all ten answers here, with the correction you made after running the comman
 your first answer was wrong.
 
 1. **Think first #1**
-> Predicted passes: 6
+   > Predicted passes: 6
 
 > Actual: 9
 
@@ -89,11 +89,11 @@ your first answer was wrong.
 > 3. .env → Environment variables and possibly secret keys would be uploaded to GitHub.
 
 3. **Think first #3**
-> Failure rate without `retry: 0`: About 12% (0.35 × 0.35 = 0.1225), because the app makes two requests and the test fails only if both return 503.
+   > Failure rate without `retry: 0`: About 12% (0.35 × 0.35 = 0.1225), because the app makes two requests and the test fails only if both return 503.
 
 > Why worse: App retries hide the problem but do not fix it. They make failures harder to reproduce and leave less clear evidence in test reports. Playwright retries can mark tests as flaky and save traces for debugging. They can also be configured differently for CI and local testing, without changing the app's behavior.
 
-4.**Think first #4** —
+4.**Think first #4** 
 
 > Answer: No, the password is not safe. Git keeps the commit history, so the old password can still be found using git log -p or GitHub's commit history. Since the repository is public, someone may have already copied it.
 
@@ -102,7 +102,12 @@ your first answer was wrong.
 > Check the logs for suspicious activity.
 > If necessary, remove the password from Git history using git filter-repo or BFG, then force-push the changes.
 
-5.
+5.**Think first #5** 
+> P(fail) with 2 retries: 0.35³ = 0.042875 ≈ 4.3% with 5 retries: 0.35⁶ ≈ 0.0018 ≈ 0.18%
+(retries: N means N + 1 attempts, and the run fails only if every attempt fails.)
+
+> Why still no: Retries only hide failures; they do not fix the 35% failure rate of the exchange-rate service. They can also hide real bugs in our code. Even a 0.18% failure rate can cause false alarms over many runs, making the team ignore failed builds. Extra retries also use more of the 8-minute budget. Instead, quarantine the unreliable test and fix it by controlling /api/rates with page.route.
+
 6.
 7.
 8.
