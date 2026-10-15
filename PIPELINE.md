@@ -108,7 +108,11 @@ your first answer was wrong.
 
 > Why still no: Retries only hide failures; they do not fix the 35% failure rate of the exchange-rate service. They can also hide real bugs in our code. Even a 0.18% failure rate can cause false alarms over many runs, making the team ignore failed builds. Extra retries also use more of the 8-minute budget. Instead, quarantine the unreliable test and fix it by controlling /api/rates with page.route.
 
-6.
+6. **Think first #6**
+>Vercel: Its Git integration sees the push to main and builds and deploys that commit to production by itself, in parallel with GitHub Actions and without waiting for it. The deployment shows source "Git" and status Ready in the dashboard, while the GitHub check is red.
+
+>Customers see: The buggy version, live. The red test job cannot stop or roll back a deployment that Vercel made on its own; the bug stays on the production URL until someone reverts or rolls back. This is the same failure as the laptop vercel --prod incident in the spec: a deployment that never passed through the gate. "git": { "deploymentEnabled": false } in vercel.json (AC-03.2) removes that path, so production can only change when the pipeline runs the CLI after the tests pass.
+
 7.
 8.
 9.
