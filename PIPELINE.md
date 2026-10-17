@@ -19,18 +19,18 @@ flowchart LR
 
 ## 2. Evidence
 
-| AC        | What                                                                                | Link / screenshot                                                                                                                                      |
-| --------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| AC-03.2   | screenshot of the Vercel dashboard's deployment list — every entry made by Actions  |                                                                                                                                                        |
-| AC-03.4   | screenshot of Deployment Protection: Vercel Authentication on, bypass created       | ![alt text](docs/ac-03.4-OpenVercelAuthen.png) ![alt text](docs/ac-03.4-ProtectionBypass.png) ![alt text](docs/ac-03.4-withVercelProtectionheader.png) |
-| AC-04.3–4 | a green `PR gate` run: smoke → deploy-preview → test-preview, with the preview URL  |                                                                                                                                                        |
-| AC-04.6   | the same run's duration, warm cache                                                 |                                                                                                                                                        |
-| AC-05.1–3 | screenshot of the branch protection / ruleset settings                              |                                                                                                                                                        |
-| AC-05.4   | the pull request whose merge was blocked by a red required check                    |                                                                                                                                                        |
-| AC-06.3–4 | a green `Main pipeline` run: test → deploy-production → verify                      |                                                                                                                                                        |
-| AC-06.7   | the `Main pipeline` run with the test job red and the deploy skipped                |                                                                                                                                                        |
-| AC-07.2   | three `Nightly` runs started by hand — one per target — each with its merged report |                                                                                                                                                        |
-| AC-08.2   | the quarantine issue                                                                |                                                                                                                                                        |
+| AC        | What                                                                                | Link / screenshot                                                                                                                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-03.2   | screenshot of the Vercel dashboard's deployment list — every entry made by Actions  |                                                                                                                                                                                                                   |
+| AC-03.4   | screenshot of Deployment Protection: Vercel Authentication on, bypass created       | ![alt text](docs/ac-03.4-OpenVercelAuthen.png) ![alt text](docs/ac-03.4-ProtectionBypass.png) ![alt text](docs/ac-03.4-withVercelProtectionheader.png)                                                            |
+| AC-04.3–4 | a green `PR gate` run: smoke → deploy-preview → test-preview, with the preview URL  | ![alt text](docs/ac-04.3-4-greenprgate-withpreviewurl.png)                                                                                                                                                        |
+| AC-04.6   | the same run's duration, warm cache                                                 |                                                                                                                                                                                                                   |
+| AC-05.1–3 | screenshot of the branch protection / ruleset settings                              | ![alt text](docs/ac-05.1-3-rulesetnname.png) ![alt text](docs/ac-05.1-3-requirepullrequestbeforemerge.png) ![alt text](docs/ac-05.1-3-statuschecktopass.png) ![alt text](docs/ac-05.1-3-successcreateruleset.png) |
+| AC-05.4   | the pull request whose merge was blocked by a red required check                    | ![alt text](docs/ac-05.4-blockmerge.png)                                                                                                                                                                          |
+| AC-06.3–4 | a green `Main pipeline` run: test → deploy-production → verify                      |                                                                                                                                                                                                                   |
+| AC-06.7   | the `Main pipeline` run with the test job red and the deploy skipped                |                                                                                                                                                                                                                   |
+| AC-07.2   | three `Nightly` runs started by hand — one per target — each with its merged report |                                                                                                                                                                                                                   |
+| AC-08.2   | the quarantine issue                                                                | ![alt text](docs/ac-08.2-quarantine_issue.png)                                                                                                                                                                    |
 
 ## 3. Timings
 
@@ -62,7 +62,7 @@ Nightly against production vs. against a local build — which was faster, and w
 1. What the PR gate reported (all three jobs), and why: **\*\***\*\***\*\***\_\_\_\_**\*\***\*\***\*\***
 2. What the main pipeline reported, and which test(s) caught it: \***\*\*\*\*\***\_\_\***\*\*\*\*\***
 3. What the Vercel dashboard and the production URL showed while `main` was red: **\_\_\_**
-4. How you restored `main`: ****\*\*\*\*****\*\*****\*\*\*\*****\_\_\_****\*\*\*\*****\*\*****\*\*\*\*****
+4. How you restored `main`: \***\*\*\*\*\*\*\***\*\*\***\*\*\*\*\*\*\***\_\_\_\***\*\*\*\*\*\*\***\*\*\***\*\*\*\*\*\*\***
 5. Your decision on Think first #10, with the reason: **\*\***\*\***\*\***\_**\*\***\*\***\*\***
 
 ## 6. Think-first answers
@@ -128,7 +128,11 @@ your first answer was wrong.
 
 > Why: GitHub does not read the workflow YAML to guess job names. It builds the list of selectable required checks from check names that have actually been reported on this repository by earlier runs (the picker searches recent check runs). Until the workflow has run once, smoke and test-preview have never been reported, so there is nothing to select.
 
-> A PR with a broken workflow file shows: The workflow never starts, so no check named smoke or test-preview is ever reported. With those checks required, the merge box stays on "Expected — Waiting for status to be reported" and the merge stays blocked. It is neither green nor red, just permanently pending. (The Actions tab may also show an "invalid workflow file" error.) The gate fails closed: a broken gate cannot let code through, but it also blocks every PR until the YAML is fixed. 9. 10.
+> A PR with a broken workflow file shows: The workflow never starts, so no check named smoke or test-preview is ever reported. With those checks required, the merge box stays on "Expected — Waiting for status to be reported" and the merge stays blocked. It is neither green nor red, just permanently pending. (The Actions tab may also show an "invalid workflow file" error.) The gate fails closed: a broken gate cannot let code through, but it also blocks every PR until the YAML is fixed.
+
+9.
+
+10.
 
 ## 7. One thing I would change
 
