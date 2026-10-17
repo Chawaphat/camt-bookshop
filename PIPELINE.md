@@ -36,8 +36,8 @@ flowchart LR
 
 | Run                                                   | Cold cache | Warm cache | Budget | Within? |
 | ----------------------------------------------------- | ---------- | ---------- | ------ | ------- |
-| PR gate (all three jobs)                              | 2m 18s     | 2m 4s      | 8 min  | yes     |
-| Main pipeline (all three jobs)                        | 2m 17s     |            | 10 min |         |
+| PR gate (all three jobs)                              |    2m 18s        |    2m 4s        | 8 min  |    yes     |
+| Main pipeline (all three jobs)                        |        2m 17s    |            | 10 min |         |
 | Nightly, target = production (start to merged report) |            |            | 20 min |         |
 | Nightly, target = local (start to merged report)      |            |            | 20 min |         |
 
@@ -130,13 +130,7 @@ your first answer was wrong.
 
 > A PR with a broken workflow file shows: The workflow never starts, so no check named smoke or test-preview is ever reported. With those checks required, the merge box stays on "Expected — Waiting for status to be reported" and the merge stays blocked. It is neither green nor red, just permanently pending. (The Actions tab may also show an "invalid workflow file" error.) The gate fails closed: a broken gate cannot let code through, but it also blocks every PR until the YAML is fixed.
 
-9.**Thinkfirst #9**
-
-> (a) Yes, the PR gate should pass. Both smoke and test-preview run only the @smoke set (one fast test per user journey), and none of them puts a cart exactly at the discount threshold.
-
-> (b) No, the main pipeline should fail at the test job, because it runs the full suite (everything except @quarantine). deploy-production would be skipped, so the bug never reaches production.
-
-> (c) The failing test is the discount boundary test . In priceCart() the condition changed from >= to >, so a cart exactly at the threshold loses its discount. Somchai's local check did not catch it because he ran only npm run test:smoke (4 tests), and that set does not contain the boundary test.
+9.
 
 10.
 
