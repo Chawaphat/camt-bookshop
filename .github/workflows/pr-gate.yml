@@ -69,6 +69,7 @@ jobs:
       - name: Build
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          NITRO_PRESET: vercel
         run: npx vercel build --token="$VERCEL_TOKEN"
       - name: Deploy Preview and URL
         id: deploy
