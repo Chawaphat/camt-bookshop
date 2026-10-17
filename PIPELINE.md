@@ -19,18 +19,18 @@ flowchart LR
 
 ## 2. Evidence
 
-| AC        | What                                                                                | Link / screenshot                                                                                                                                                                                                 |
-| --------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AC-03.2   | screenshot of the Vercel dashboard's deployment list — every entry made by Actions  | ![alt text](docs/ac-03.2-VercelDeployDashboard.png) ![alt text](docs/ac-03.2-CheckThatDeployFromCLI.png)                                                                                                          |
-| AC-03.4   | screenshot of Deployment Protection: Vercel Authentication on, bypass created       | ![alt text](docs/ac-03.4-OpenVercelAuthen.png) ![alt text](docs/ac-03.4-ProtectionBypass.png) ![alt text](docs/ac-03.4-withVercelProtectionheader.png)                                                            |
-| AC-04.3–4 | a green `PR gate` run: smoke → deploy-preview → test-preview, with the preview URL  | ![alt text](docs/ac-04.3-4-greenprgate-withpreviewurl.png)                                                                                                                                                        |
-| AC-04.6   | the same run's duration, warm cache                                                 | ![alt text](docs/ac04.6-cold%20cache.png) ![alt text](docs/ac04.6-warm%20cache.png)                                                                                                                               |
-| AC-05.1–3 | screenshot of the branch protection / ruleset settings                              | ![alt text](docs/ac-05.1-3-rulesetnname.png) ![alt text](docs/ac-05.1-3-requirepullrequestbeforemerge.png) ![alt text](docs/ac-05.1-3-statuschecktopass.png) ![alt text](docs/ac-05.1-3-successcreateruleset.png) |
-| AC-05.4   | the pull request whose merge was blocked by a red required check                    | ![alt text](docs/ac-05.4-blockmerge.png)                                                                                                                                                                          |
-| AC-06.3–4 | a green `Main pipeline` run: test → deploy-production → verify                      | ![alt text](docs/ac-06.3-4-green%20main%20pipeline.png)                                                                                                                                                           |
-| AC-06.7   | the `Main pipeline` run with the test job red and the deploy skipped                | ![alt text](docs/ac-06.7-refactorsomchai.png)                                                                                                                                                                     |
-| AC-07.2   | three `Nightly` runs started by hand — one per target — each with its merged report |                                                                                                                                                                                                                   |
-| AC-08.2   | the quarantine issue                                                                | ![alt text](docs/ac-08.2-quarantine_issue.png)                                                                                                                                                                    |
+| AC        | What                                                                                | Link / screenshot                                                                                                                                                                                                                                                    |
+| --------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-03.2   | screenshot of the Vercel dashboard's deployment list — every entry made by Actions  | ![alt text](docs/ac-03.2-VercelDeployDashboard.png) ![alt text](docs/ac-03.2-CheckThatDeployFromCLI.png)                                                                                                                                                             |
+| AC-03.4   | screenshot of Deployment Protection: Vercel Authentication on, bypass created       | ![alt text](docs/ac-03.4-OpenVercelAuthen.png) ![alt text](docs/ac-03.4-ProtectionBypass.png) ![alt text](docs/ac-03.4-withVercelProtectionheader.png)                                                                                                               |
+| AC-04.3–4 | a green `PR gate` run: smoke → deploy-preview → test-preview, with the preview URL  | ![alt text](docs/ac-04.3-4-greenprgate-withpreviewurl.png)                                                                                                                                                                                                           |
+| AC-04.6   | the same run's duration, warm cache                                                 | ![alt text](docs/ac04.6-cold%20cache.png) ![alt text](docs/ac04.6-warm%20cache.png)                                                                                                                                                                                  |
+| AC-05.1–3 | screenshot of the branch protection / ruleset settings                              | ![alt text](docs/ac-05.1-3-rulesetnname.png) ![alt text](docs/ac-05.1-3-requirepullrequestbeforemerge.png) ![alt text](docs/ac-05.1-3-statuschecktopass.png) ![alt text](docs/ac-05.1-3-successcreateruleset.png)                                                    |
+| AC-05.4   | the pull request whose merge was blocked by a red required check                    | ![alt text](docs/ac-05.4-blockmerge.png)                                                                                                                                                                                                                             |
+| AC-06.3–4 | a green `Main pipeline` run: test → deploy-production → verify                      | ![alt text](docs/ac-06.3-4-green%20main%20pipeline.png)                                                                                                                                                                                                              |
+| AC-06.7   | the `Main pipeline` run with the test job red and the deploy skipped                | ![alt text](docs/ac-06.7-refactorsomchai.png)                                                                                                                                                                                                                        |
+| AC-07.2   | three `Nightly` runs started by hand — one per target — each with its merged report | ![alt text](docs/ac-07.2-runProduction.png) ![alt text](docs/ac-07.2-blobreportProduction.png) ![alt text](docs/ac-07.2-runURL.png) ![alt text](docs/ac-07.2-blobreportURL.png) ![alt text](docs/ac-07.2-runLocal.png) ![alt text](docs/ac-07.2-blobreportLocal.png) |
+| AC-08.2   | the quarantine issue                                                                | ![alt text](docs/ac-08.2-quarantine_issue.png)                                                                                                                                                                                                                       |
 
 ## 3. Timings
 
@@ -38,12 +38,12 @@ flowchart LR
 | ----------------------------------------------------- | ---------- | ---------- | ------ | ------- |
 | PR gate (all three jobs)                              | 2m 18s     | 2m 4s      | 8 min  | yes     |
 | Main pipeline (all three jobs)                        | 2m 17s     | 2m 8s      | 10 min | yes     |
-| Nightly, target = production (start to merged report) |            |            | 20 min |         |
-| Nightly, target = local (start to merged report)      |            |            | 20 min |         |
+| Nightly, target = production (start to merged report) | 1m 46s     | 1m 38s     | 20 min | yes     |
+| Nightly, target = local (start to merged report)      | 1m 50s     | 1m 45s     | 20 min | yes     |
 
-Which step did the browser cache save the most time on, and how much? **\*\***\_\_**\*\***
+> Which step did the browser cache save the most time on, and how much? : The Playwright browser installation step. On the cold run Install Chromium (cache miss) took 52 s; on the warm run Install system dependencies only (cache hit) took 29 s, a saving of 23 s (about 44%).
 
-Nightly against production vs. against a local build — which was faster, and why? **\_\_**
+> Nightly against production vs. against a local build — which was faster, and why? : Production was faster because it did not need to build the app on each shard. In local mode, every shard had to build the app before running the tests, which increased the total execution time.
 
 ## 4. Triage record — the quarantined test
 
@@ -152,3 +152,7 @@ your first answer was wrong.
 
 If you had a second week on this pipeline, what one change would make it more trustworthy
 or cheaper, and how would you measure that it worked?
+
+> I would fix `fx.spec.ts` by mocking `/api/rates` with `page.route` for both success and failure cases. Then, remove the `@quarantine` tag, close the issue, and add a CI check for expired quarantines.
+
+> I would measure success by checking that currency tests pass every night for two weeks, no quarantine is expired, and removing the nightly job saves runner time.
