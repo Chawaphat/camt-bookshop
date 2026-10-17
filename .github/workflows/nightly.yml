@@ -1,0 +1,204 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "What to test"
+        type: choice
+        options:
+          - production
+          - url
+          - local
+        default: production
+      url:
+        description: "Deployment URL (used only when target = url)"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  target:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      base_url: ${{ steps.pick.outputs.base_url }}
+    steps:
+      - id: pick
+        env:
+          TARGET: ${{ inputs.target || 'production' }}
+          INPUT_URL: ${{ inputs.url }}
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          case "$TARGET" in
+            production)
+              if [ -z "$PRODUCTION_URL" ]; then
+                echo "::error::repository variable PRODUCTION_URL is not set"
+                exit 1
+              fi
+              base_url="$PRODUCTION_URL"
+              ;;
+            url)
+              case "$INPUT_URL" in
+                *[[:space:]]*)
+                  echo "::error::the URL must not contain whitespace"
+                  exit 1
+                  ;;
+                https://*)
+                  base_url="$INPUT_URL"
+                  ;;
+                *)
+                  echo "::error::target=url needs a URL that starts with https://"
+                  exit 1
+                  ;;
+              esac
+              ;;
+            local)
+              base_url=""      
+              ;;
+            *)
+              echo "::error::unknown target: $TARGET"
+              exit 1
+              ;;
+          esac
+          echo "base_url=$base_url" >> "$GITHUB_OUTPUT"
+          echo "Target: $TARGET (${base_url:-local build on each runner})" >> "$GITHUB_STEP_SUMMARY"
+
+  test:
+    needs: target
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    env:
+      BASE_URL: ${{ needs.target.outputs.base_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+      - name: Cache Playwright browsers (all three)
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-all-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install browsers (cache miss)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+
+      - name: Install system dependencies only (cache hit)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps
+
+      - name: Run full suite, shard ${{ matrix.shard }}/3
+        env:
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_PASS: ${{ secrets.TEST_PASS }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          SHARD: ${{ matrix.shard }}
+        run: npx playwright test --grep-invert @quarantine --shard="$SHARD/3"
+
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 1
+
+  merge-reports:
+    needs: test
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+      - name: Download all blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          merge-multiple: true
+          path: all-blob-reports
+      - name: Merge into one HTML report
+        env:
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_PASS: ${{ secrets.TEST_PASS }}
+          PW_TEST_HTML_REPORT_OPEN: never
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload merged HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-nightly
+          path: playwright-report/
+          retention-days: 14
+
+  quarantine:
+    needs: target
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    env:
+      BASE_URL: ${{ needs.target.outputs.base_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+      - name: Cache Playwright browsers (chromium)
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Chromium (cache miss)
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install system dependencies only (cache hit)
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Run quarantined tests (non-blocking)
+        env:
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_PASS: ${{ secrets.TEST_PASS }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npx playwright test --project=chromium --grep @quarantine
+
+      - name: Upload quarantine report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-quarantine
+          path: playwright-report/
+          retention-days: 7

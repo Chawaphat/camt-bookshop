@@ -24,11 +24,11 @@ flowchart LR
 | AC-03.2   | screenshot of the Vercel dashboard's deployment list — every entry made by Actions  | ![alt text](docs/ac-03.2-VercelDeployDashboard.png) ![alt text](docs/ac-03.2-CheckThatDeployFromCLI.png)                                                                                                          |
 | AC-03.4   | screenshot of Deployment Protection: Vercel Authentication on, bypass created       | ![alt text](docs/ac-03.4-OpenVercelAuthen.png) ![alt text](docs/ac-03.4-ProtectionBypass.png) ![alt text](docs/ac-03.4-withVercelProtectionheader.png)                                                            |
 | AC-04.3–4 | a green `PR gate` run: smoke → deploy-preview → test-preview, with the preview URL  | ![alt text](docs/ac-04.3-4-greenprgate-withpreviewurl.png)                                                                                                                                                        |
-| AC-04.6   | the same run's duration, warm cache                                                 | ![alt text](docs/ac-04.6-warmcache.png)                                                                                                                                                                           |
+| AC-04.6   | the same run's duration, warm cache                                                 | ![alt text](docs/ac04.6-cold%20cache.png) ![alt text](docs/ac04.6-warm%20cache.png)                                                                                                                               |
 | AC-05.1–3 | screenshot of the branch protection / ruleset settings                              | ![alt text](docs/ac-05.1-3-rulesetnname.png) ![alt text](docs/ac-05.1-3-requirepullrequestbeforemerge.png) ![alt text](docs/ac-05.1-3-statuschecktopass.png) ![alt text](docs/ac-05.1-3-successcreateruleset.png) |
 | AC-05.4   | the pull request whose merge was blocked by a red required check                    | ![alt text](docs/ac-05.4-blockmerge.png)                                                                                                                                                                          |
 | AC-06.3–4 | a green `Main pipeline` run: test → deploy-production → verify                      | ![alt text](docs/ac-06.3-4-green%20main%20pipeline.png)                                                                                                                                                           |
-| AC-06.7   | the `Main pipeline` run with the test job red and the deploy skipped                |                                                                                                                                                                                                                   |
+| AC-06.7   | the `Main pipeline` run with the test job red and the deploy skipped                | ![alt text](docs/ac-06.7-refactorsomchai.png)                                                                                                                                                                     |
 | AC-07.2   | three `Nightly` runs started by hand — one per target — each with its merged report |                                                                                                                                                                                                                   |
 | AC-08.2   | the quarantine issue                                                                | ![alt text](docs/ac-08.2-quarantine_issue.png)                                                                                                                                                                    |
 
@@ -36,8 +36,8 @@ flowchart LR
 
 | Run                                                   | Cold cache | Warm cache | Budget | Within? |
 | ----------------------------------------------------- | ---------- | ---------- | ------ | ------- |
-| PR gate (all three jobs)                              |    2m 18s        |    2m 4s        | 8 min  |    yes     |
-| Main pipeline (all three jobs)                        |        2m 17s    |            | 10 min |         |
+| PR gate (all three jobs)                              | 2m 18s     | 2m 4s      | 8 min  | yes     |
+| Main pipeline (all three jobs)                        | 2m 17s     | 2m 8s      | 10 min | yes     |
 | Nightly, target = production (start to merged report) |            |            | 20 min |         |
 | Nightly, target = local (start to merged report)      |            |            | 20 min |         |
 
@@ -59,11 +59,11 @@ Nightly against production vs. against a local build — which was faster, and w
 
 ## 5. The teammate's pull request (PR-42)
 
-1. What the PR gate reported (all three jobs), and why: **\*\***\*\***\*\***\_\_\_\_**\*\***\*\***\*\***
-2. What the main pipeline reported, and which test(s) caught it: \***\*\*\*\*\***\_\_\***\*\*\*\*\***
-3. What the Vercel dashboard and the production URL showed while `main` was red: **\_\_\_**
-4. How you restored `main`: \***\*\*\*\*\*\*\***\*\*\***\*\*\*\*\*\*\***\_\_\_\***\*\*\*\*\*\*\***\*\*\***\*\*\*\*\*\*\***
-5. Your decision on Think first #10, with the reason: **\*\***\*\***\*\***\_**\*\***\*\***\*\***
+1. What the PR gate reported (all three jobs), and why: All 3 jobs (smoke, deploy-preview, test-preview) passed, so GitHub allowed the merge. The gate only runs the @smoke set , and none of those tests puts a cart exactly at the discount threshold, so the regression in Somchai's refactor was invisible to it.
+2. What the main pipeline reported, and which test(s) caught it: The test job failed at the "Run full suite" step, in tests in cart.spec.ts and checkout.spec.ts . The cause is a boundary change in the extracted priceCart(): the discount condition went from subtotal >= DISCOUNT_THRESHOLD to subtotal > DISCOUNT_THRESHOLD, so a cart exactly at the threshold lost its discount. deploy-production and verify were skipped .
+3. What the Vercel dashboard and the production URL showed while `main` was red: The dashboard listed no new production deployment; the latest production deployment was still the one from the last green run. The production URL kept serving that previous, working version.
+4. How you restored `main`: I used the Revert button on the merged pull request. GitHub opened a new pull request containing a commit that undoes Somchai's change, I waited for the PR gate to pass, and merged it. No history was rewritten, and I did not edit any test to make it pass.
+5. Your decision on Think first #10, with the reason: I tag the discount-boundary test @smoke and keep the full suite on main and in the nightly run.
 
 ## 6. Think-first answers
 
@@ -130,9 +130,23 @@ your first answer was wrong.
 
 > A PR with a broken workflow file shows: The workflow never starts, so no check named smoke or test-preview is ever reported. With those checks required, the merge box stays on "Expected — Waiting for status to be reported" and the merge stays blocked. It is neither green nor red, just permanently pending. (The Actions tab may also show an "invalid workflow file" error.) The gate fails closed: a broken gate cannot let code through, but it also blocks every PR until the YAML is fixed.
 
-9.
+9. **Thinkfirst9**
+   > (a) Yes, the PR gate should pass. Both smoke and test-preview run only the @smoke set (one fast test per user journey), and none of them puts a cart exactly at the discount threshold.
 
-10.
+> (b) No, the main pipeline should fail at the test job, because it runs the full suite (everything except @quarantine). deploy-production would be skipped, so the bug never reaches production.
+
+> (c) The failing test is the discount boundary test a cart whose subtotal equals DISCOUNT_THRESHOLD; . In priceCart() the condition changed from >= to >, so a cart exactly at the threshold loses its discount. Somchai's local check did not catch it because he ran only npm run test:smoke (4 tests), and that set does not contain the boundary test.
+
+10.**Thinkfirst10**
+
+> Tag it @smoke: For: It is the cheapest fix: one extra test of a few seconds, so the PR gate stays well inside its 8-minute budget . It catches this exact bug in both smoke and test-preview, before the merge.
+> Against: The smoke set is defined as one test per user journey; tagging a test for every bug that slipped through makes it grow until it is no longer fast. It also only protects against bugs we already know about: this boundary was found after the damage, and the next one will be a different test.
+
+> Full suite on the preview:
+> For: It catches any bug the full suite can catch before merge, without having to guess which test matters, so "gate green, main red" can no longer happen.
+> Against: The full suite takes 41 s on the test job versus 38 s for smoke test, and against a deployed URL it is slower still because of network latency. That would push the PR gate towards or past its 8-minute budget and slow every PR to protect against rare bugs. It also repeats what the test job already does on main.
+
+> Decision and reason: Tag the boundary test @smoke and keep the full suite on main and nightly. The main pipeline is the safety net (as this incident showed: production was never touched), while the PR gate should stay fast so people keep using it. If the measured full-suite time is only a few seconds on top of the current gate, running the full suite on the preview would also be defensible, so the decision follows the timing budget.
 
 ## 7. One thing I would change
 
