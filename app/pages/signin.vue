@@ -12,7 +12,7 @@ async function onSubmit(): Promise<void> {
       method: "POST",
       body: { email: email.value, password: password.value },
     });
-    signIn(result.email);
+    // signIn(result.email);
     await navigateTo("/books");
   } catch {
     error.value = "Incorrect email or password.";
@@ -43,7 +43,7 @@ async function onSubmit(): Promise<void> {
           required
       /></label>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
-      <button type="submit">Sign in test failed</button>
+      <button type="submit">Sign in</button>
     </form>
   </section>
 </template>
