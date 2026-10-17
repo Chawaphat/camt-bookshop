@@ -124,8 +124,14 @@ your first answer was wrong.
 
 > Correction: My first prediction was that the private window would show the app's sign-in page. In fact I first opened it from the dashboard's Visit button in a browser that was logged in to Vercel. In a real private window Vercel asks me to log in first.
 
-8.
+8.**Think first #8**
+
+> Why: GitHub does not read the workflow YAML to guess job names. It builds the list of selectable required checks from check names that have actually been reported on this repository by earlier runs (the picker searches recent check runs). Until the workflow has run once, smoke and test-preview have never been reported, so there is nothing to select.
+
+> A PR with a broken workflow file shows: The workflow never starts, so no check named smoke or test-preview is ever reported. With those checks required, the merge box stays on "Expected — Waiting for status to be reported" and the merge stays blocked. It is neither green nor red, just permanently pending. (The Actions tab may also show an "invalid workflow file" error.) The gate fails closed: a broken gate cannot let code through, but it also blocks every PR until the YAML is fixed.
+
 9.
+
 10.
 
 ## 7. One thing I would change
