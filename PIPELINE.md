@@ -22,7 +22,7 @@ flowchart LR
 | AC        | What                                                                                | Link / screenshot |
 | --------- | ----------------------------------------------------------------------------------- | ----------------- |
 | AC-03.2   | screenshot of the Vercel dashboard's deployment list — every entry made by Actions  |                   |
-| AC-03.4   | screenshot of Deployment Protection: Vercel Authentication on, bypass created       |                   |
+| AC-03.4   | screenshot of Deployment Protection: Vercel Authentication on, bypass created       |  ![alt text](docs/ac-03.4-OpenVercelAuthen.png) ![alt text](docs/ac-03.4-ProtectionBypass.png) ![alt text](docs/ac-03.4-withVercelProtectionheader.png)  |
 | AC-04.3–4 | a green `PR gate` run: smoke → deploy-preview → test-preview, with the preview URL  |                   |
 | AC-04.6   | the same run's duration, warm cache                                                 |                   |
 | AC-05.1–3 | screenshot of the branch protection / ruleset settings                              |                   |
@@ -79,8 +79,8 @@ your first answer was wrong.
 
 > Evidence: The test fails because `GET /api/rates` sometimes returns 503 due to `Math.random() < fxFailureRate`, which has a 35% failure rate by default. The UI and test locator are correct. So, the same code can pass or fail randomly. Out of 10 runs, around 6–7 runs are expected to pass.
 
-> ![alt text](image.png)
-> ![alt text](image-1.png)
+> ![alt text](docs/flakytestFrom10Test.png)
+> ![alt text](docs/fx.spec.ts_return503.png)
 
 2. **Think first #2**
 
@@ -113,7 +113,15 @@ your first answer was wrong.
 
 >Customers see: The buggy version, live. The red test job cannot stop or roll back a deployment that Vercel made on its own; the bug stays on the production URL until someone reverts or rolls back. This is the same failure as the laptop vercel --prod incident in the spec: a deployment that never passed through the gate. "git": { "deploymentEnabled": false } in vercel.json (AC-03.2) removes that path, so production can only change when the pipeline runs the CLI after the tests pass.
 
-7.
+7.**Think first #7**
+>Private window shows: Vercel's own login page ("Log in to Vercel"), not the app. The preview is protected by Vercel Authentication, so a visitor who is not logged in to Vercel cannot reach it directly.
+
+>Tests without the bypass: Playwright is a visitor with no Vercel login, so every page.goto() would receive Vercel's authentication page instead of the app. The sign-in form and the "Books" heading never appear, so essentially every test fails by timeout. These failures are not product bugs, and the timeout messages do not mention authentication, so the red result would mislead.
+
+>Fixes: (a) Turn Vercel Authentication off, so previews are public. (b) Keep it on and give the pipeline Protection Bypass for Automation: a secret sent in the x-vercel-protection-bypass header. Chosen: (b). A preview holds a pull request's unreviewed code, so it should not be open to anyone with the link. With (b) only the pipeline, which holds the secret as a repository secret, gets in, and previews stay private for everyone else (PL-03 / AC-03.4).
+
+>Correction: My first prediction was that the private window would show the app's sign-in page. In fact I first opened it from the dashboard's Visit button in a browser that was logged in to Vercel. In a real private window Vercel asks me to log in first.
+
 8.
 9.
 10.
